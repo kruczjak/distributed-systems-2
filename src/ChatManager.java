@@ -2,6 +2,9 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by kruczjak on 3/25/17.
  */
@@ -10,6 +13,7 @@ public class ChatManager {
     private static final Integer TIMEOUT = 100000;
     private final JChannel channel;
     private final String nickname;
+    private final ChatManagerReceiver chatManagerReceiver = new ChatManagerReceiver();
 
     ChatManager(String nickname) throws Exception {
         this.nickname = nickname;
@@ -37,9 +41,38 @@ public class ChatManager {
         this.channel.close();
     }
 
+    public List<ChatChannel> listChannels() {
+        List<ChatChannel> chatChannelList = new ArrayList<>();
+        ChatOperationProtos.ChatState state = this.chatManagerReceiver.getState();
+
+        if (state.getStateCount() <= 0) return chatChannelList;
+
+        for (ChatOperationProtos.ChatAction chatAction : state.getStateList()) {
+            ChatOperationProtos.ChatAction.ActionType actionType = chatAction.getAction();
+            String channelName = chatAction.getChannel();
+            String channelMemberNickname = chatAction.getNickname();
+
+            ChatChannel chatChannel = chatChannelList.get(chatChannelList.indexOf(channelName));
+            if (chatChannel == null) {
+                chatChannel = new ChatChannel(channelName);
+                chatChannelList.add(chatChannel);
+            }
+
+            if (actionType == ChatOperationProtos.ChatAction.ActionType.JOIN) {
+                chatChannel.addChannelMember(channelMemberNickname);
+            } else {
+                chatChannel.removeChannelMember(channelMemberNickname);
+            }
+
+            // so, remove empty???
+        }
+
+        return chatChannelList;
+    }
+
     private JChannel initializedChannel() throws Exception {
         JChannel channel = new JChannel(false);
-        channel.setReceiver(new ChatManagerReceiver(this));
+        channel.setReceiver(this.chatManagerReceiver);
         org.jgroups.stack.ProtocolStack protocolStack = ProtocolStack.getProtocolStack();
         protocolStack.init();
         channel.setProtocolStack(protocolStack);

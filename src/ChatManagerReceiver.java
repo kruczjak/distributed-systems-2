@@ -6,16 +6,16 @@ import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by kruczjak on 3/25/17.
  */
 public class ChatManagerReceiver extends ReceiverAdapter {
-    private final ChatManager chatManager;
     private ChatOperationProtos.ChatState chatState;
 
-    ChatManagerReceiver(ChatManager chatManager) {
-        this.chatManager = chatManager;
+    ChatManagerReceiver() {
         this.chatState = ChatOperationProtos.ChatState.newBuilder().build();
     }
 
@@ -32,7 +32,29 @@ public class ChatManagerReceiver extends ReceiverAdapter {
         ChatOperationProtos.ChatAction chatAction = ChatOperationProtos.ChatAction.parseFrom(msg.getRawBuffer());
         ChatOperationProtos.ChatState.Builder builder = this.getChatStateBuilder();
 
+        if (chatAction.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN) {
+            builder.addState(chatAction);
+        } else {
+            // handle LEAVE
+            List<ChatOperationProtos.ChatAction> newChatActionList = builder
+                .getStateList()
+                .stream()
+                .filter(this::isJoinActionToDelete)
+                .collect(Collectors.toList());
+            builder.clear().addAllState(newChatActionList);
+        }
+
         this.buildStateSynchronized(builder);
+    }
+
+    private boolean isJoinActionToDelete(ChatOperationProtos.ChatAction action) {
+        return action.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN
+                && !action.getNickname().equals(action.getNickname())
+                && !action.getChannel().equals(action.getChannel());
+    }
+
+    public ChatOperationProtos.ChatState getState() {
+        return this.chatState;
     }
 
     @Override
