@@ -20,6 +20,7 @@ public class SingleChannelChat {
 
     public void leave() {
         this.jChannel.close();
+        System.out.println("*** Closing channel: " + this.channelName);
     }
 
     public void sendMessage(Message message) throws Exception {
@@ -28,6 +29,7 @@ public class SingleChannelChat {
 
     private void connectToChannel() throws Exception {
         this.jChannel.connect(this.channelName);
+        System.out.println("*** Connected to channel: " + this.channelName);
     }
 
     private JChannel createJChannel() throws Exception {
@@ -39,14 +41,5 @@ public class SingleChannelChat {
         protocolStack.init();
 
         return jChannel;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof String) {
-            String comparedObj = (String) obj;
-            return this.channelName.equals(comparedObj);
-        }
-        return super.equals(obj);
     }
 }

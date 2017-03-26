@@ -23,11 +23,9 @@ public class ChatChannel {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof String) {
-            String comparedObj = (String) obj;
-            return this.channelId.equals(comparedObj);
-        }
-        return super.equals(obj);
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder("> Channel: " + this.channelId + "\n");
+        for (String member : this.channelMembers) stringBuilder.append("!!> ").append(member).append("\n");
+        return stringBuilder.toString();
     }
 }

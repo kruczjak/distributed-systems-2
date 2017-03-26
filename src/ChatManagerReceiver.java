@@ -34,8 +34,10 @@ public class ChatManagerReceiver extends ReceiverAdapter {
 
         if (chatAction.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN) {
             builder.addState(chatAction);
+            System.out.println("*** " + chatAction.getNickname() + " is joining " + chatAction.getChannel());
         } else {
             // handle LEAVE
+            System.out.println("*** " + chatAction.getNickname() + " is leaving " + chatAction.getChannel());
             List<ChatOperationProtos.ChatAction> newChatActionList = builder
                 .getStateList()
                 .stream()

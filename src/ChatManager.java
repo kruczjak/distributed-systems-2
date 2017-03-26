@@ -2,8 +2,8 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by kruczjak on 3/25/17.
@@ -41,22 +41,18 @@ public class ChatManager {
         this.channel.close();
     }
 
-    public List<ChatChannel> listChannels() {
-        List<ChatChannel> chatChannelList = new ArrayList<>();
+    public Map<String, ChatChannel> listChannels() {
+        Map<String, ChatChannel> chatChannelMap = new HashMap<>();
         ChatOperationProtos.ChatState state = this.chatManagerReceiver.getState();
 
-        if (state.getStateCount() <= 0) return chatChannelList;
+        if (state.getStateCount() <= 0) return chatChannelMap;
 
         for (ChatOperationProtos.ChatAction chatAction : state.getStateList()) {
             ChatOperationProtos.ChatAction.ActionType actionType = chatAction.getAction();
             String channelName = chatAction.getChannel();
             String channelMemberNickname = chatAction.getNickname();
 
-            ChatChannel chatChannel = this.fetchChannel(chatChannelList, channelName);
-            if (chatChannel == null) {
-                chatChannel = new ChatChannel(channelName);
-                chatChannelList.add(chatChannel);
-            }
+            ChatChannel chatChannel = chatChannelMap.computeIfAbsent(channelName, ChatChannel::new);
 
             if (actionType == ChatOperationProtos.ChatAction.ActionType.JOIN) {
                 chatChannel.addChannelMember(channelMemberNickname);
@@ -67,7 +63,7 @@ public class ChatManager {
             // so, remove empty???
         }
 
-        return chatChannelList;
+        return chatChannelMap;
     }
 
     private JChannel initializedChannel() throws Exception {
@@ -82,6 +78,7 @@ public class ChatManager {
 
     private void connectToChannel() throws Exception {
         this.channel.connect(CHANNEL_NAME);
+        System.out.println("*** ChatManager connected. Fetching state ***");
         this.channel.getState(null, TIMEOUT);
     }
 
@@ -91,13 +88,5 @@ public class ChatManager {
                 .setAction(action)
                 .setChannel(channel)
                 .build();
-    }
-
-    private ChatChannel fetchChannel(List<ChatChannel> chatChannelList, String channelName) {
-        int i = chatChannelList.indexOf(channelName);
-
-        if (i == -1) return null;
-
-        return chatChannelList.get(i);
     }
 }

@@ -1,21 +1,20 @@
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import org.jgroups.Message;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by kruczjak on 3/25/17.
  */
 
 public class Starter {
+    private final Map<String, SingleChannelChat> singleChannelChatList = new HashMap<>();
     private String nickname;
     private ChatManager chatManager;
-    private final List<SingleChannelChat> singleChannelChatList = new ArrayList<>();
     private BufferedReader inputReader;
 
     private Starter(String nickname) {
@@ -32,6 +31,7 @@ public class Starter {
     }
 
     private boolean inputLoop(BufferedReader inputReader) throws Exception {
+        System.out.println("------------------------------------");
         System.out.println("Commands:");
         System.out.println("q - quit");
         System.out.println("join <channelName> - joins channel with desired name");
@@ -46,44 +46,36 @@ public class Starter {
         } else if (input.startsWith("join")) {
             String channelName = getChannelName("join ", input);
             SingleChannelChat singleChannelChat = new SingleChannelChat(this.nickname, channelName);
-            this.singleChannelChatList.add(singleChannelChat);
+            this.singleChannelChatList.put(channelName, singleChannelChat);
             this.chatManager.joinToChannel(channelName);
         } else if (input.startsWith("leave")) {
             String channelName = getChannelName("leave ", input);
-            SingleChannelChat singleChannelChat = this.fetchSingleChannelChat(channelName);
+            SingleChannelChat singleChannelChat = this.singleChannelChatList.get(channelName);
 
             if (singleChannelChat == null) {
                 System.out.println("No such channel...");
                 return true;
             }
 
-            this.singleChannelChatList.remove(singleChannelChat);
+            this.singleChannelChatList.remove(channelName);
             singleChannelChat.leave();
             this.chatManager.leaveChannel(channelName);
         } else if (input.startsWith("send")) {
             String channelName = getChannelName("send ", input);
-            SingleChannelChat singleChannelChat = this.fetchSingleChannelChat(channelName);
+            SingleChannelChat singleChannelChat = this.singleChannelChatList.get(channelName);
 
             if (singleChannelChat == null) {
-                System.out.println("No such channel...");
+                System.out.println("No such channel: " + channelName);
                 return true;
             }
 
             singleChannelChat.sendMessage(this.preparedMessage());
         } else if (input.startsWith("list channels")) {
-            List<ChatChannel> chatChannelList = this.chatManager.listChannels();
-            chatChannelList.forEach(System.out::println);
+            Map<String, ChatChannel> chatChannelMap = this.chatManager.listChannels();
+            chatChannelMap.values().forEach(System.out::println);
         }
 
         return true;
-    }
-
-    private SingleChannelChat fetchSingleChannelChat(String channelName) {
-        int index = singleChannelChatList.indexOf(channelName);
-
-        if (index == -1) return null;
-
-        return singleChannelChatList.get(index);
     }
 
     private Message preparedMessage() throws IOException {
