@@ -51,8 +51,8 @@ public class ChatManagerReceiver extends ReceiverAdapter {
 
     private boolean isJoinActionToDelete(ChatOperationProtos.ChatAction action, ChatOperationProtos.ChatAction actionFromList) {
         return actionFromList.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN
-                && !action.getNickname().equals(actionFromList.getNickname())
-                && !action.getChannel().equals(actionFromList.getChannel());
+                && action.getNickname().equals(actionFromList.getNickname())
+                && action.getChannel().equals(actionFromList.getChannel());
     }
 
     public ChatOperationProtos.ChatState getState() {
