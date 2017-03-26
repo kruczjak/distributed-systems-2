@@ -52,7 +52,7 @@ public class ChatManager {
             String channelName = chatAction.getChannel();
             String channelMemberNickname = chatAction.getNickname();
 
-            ChatChannel chatChannel = chatChannelList.get(chatChannelList.indexOf(channelName));
+            ChatChannel chatChannel = this.fetchChannel(chatChannelList, channelName);
             if (chatChannel == null) {
                 chatChannel = new ChatChannel(channelName);
                 chatChannelList.add(chatChannel);
@@ -74,8 +74,8 @@ public class ChatManager {
         JChannel channel = new JChannel(false);
         channel.setReceiver(this.chatManagerReceiver);
         org.jgroups.stack.ProtocolStack protocolStack = ProtocolStack.getProtocolStack();
-        protocolStack.init();
         channel.setProtocolStack(protocolStack);
+        protocolStack.init();
 
         return channel;
     }
@@ -91,5 +91,13 @@ public class ChatManager {
                 .setAction(action)
                 .setChannel(channel)
                 .build();
+    }
+
+    private ChatChannel fetchChannel(List<ChatChannel> chatChannelList, String channelName) {
+        int i = chatChannelList.indexOf(channelName);
+
+        if (i == -1) return null;
+
+        return chatChannelList.get(i);
     }
 }

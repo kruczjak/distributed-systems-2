@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 
 public class ProtocolStack {
     public static org.jgroups.stack.ProtocolStack getProtocolStack() throws UnknownHostException {
-        ProtocolStack.getProtocolStack(null);
+        return ProtocolStack.getProtocolStack(null);
     }
 
     public static org.jgroups.stack.ProtocolStack getProtocolStack(String address) throws UnknownHostException {
