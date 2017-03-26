@@ -1,3 +1,4 @@
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import org.jgroups.Message;
 import pl.edu.agh.dsrg.sr.chat.protos.ChatOperationProtos;
 
@@ -49,13 +50,25 @@ public class Starter {
             this.chatManager.joinToChannel(channelName);
         } else if (input.startsWith("leave")) {
             String channelName = getChannelName("leave ", input);
-            SingleChannelChat singleChannelChat = this.singleChannelChatList
-                .remove(this.singleChannelChatList.indexOf(channelName));
+            SingleChannelChat singleChannelChat = this.fetchSingleChannelChat(channelName);
+
+            if (singleChannelChat == null) {
+                System.out.println("No such channel...");
+                return true;
+            }
+
+            this.singleChannelChatList.remove(singleChannelChat);
             singleChannelChat.leave();
             this.chatManager.leaveChannel(channelName);
         } else if (input.startsWith("send")) {
             String channelName = getChannelName("send ", input);
-            SingleChannelChat singleChannelChat = this.fetchSingleChannelChat(this.singleChannelChatList, channelName);
+            SingleChannelChat singleChannelChat = this.fetchSingleChannelChat(channelName);
+
+            if (singleChannelChat == null) {
+                System.out.println("No such channel...");
+                return true;
+            }
+
             singleChannelChat.sendMessage(this.preparedMessage());
         } else if (input.startsWith("list channels")) {
             List<ChatChannel> chatChannelList = this.chatManager.listChannels();
@@ -65,7 +78,13 @@ public class Starter {
         return true;
     }
 
-    private
+    private SingleChannelChat fetchSingleChannelChat(String channelName) {
+        int index = singleChannelChatList.indexOf(channelName);
+
+        if (index == -1) return null;
+
+        return singleChannelChatList.get(index);
+    }
 
     private Message preparedMessage() throws IOException {
         String line = inputReader.readLine();
