@@ -41,7 +41,7 @@ public class ChatManagerReceiver extends ReceiverAdapter {
             List<ChatOperationProtos.ChatAction> newChatActionList = builder
                 .getStateList()
                 .stream()
-                .filter(this::isJoinActionToDelete)
+                .filter(action -> this.isJoinActionToDelete(chatAction, action))
                 .collect(Collectors.toList());
             builder.clear().addAllState(newChatActionList);
         }
@@ -49,10 +49,10 @@ public class ChatManagerReceiver extends ReceiverAdapter {
         this.buildStateSynchronized(builder);
     }
 
-    private boolean isJoinActionToDelete(ChatOperationProtos.ChatAction action) {
-        return action.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN
-                && !action.getNickname().equals(action.getNickname())
-                && !action.getChannel().equals(action.getChannel());
+    private boolean isJoinActionToDelete(ChatOperationProtos.ChatAction action, ChatOperationProtos.ChatAction actionFromList) {
+        return actionFromList.getAction() == ChatOperationProtos.ChatAction.ActionType.JOIN
+                && !action.getNickname().equals(actionFromList.getNickname())
+                && !action.getChannel().equals(actionFromList.getChannel());
     }
 
     public ChatOperationProtos.ChatState getState() {
